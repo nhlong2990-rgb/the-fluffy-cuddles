@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  tag       String
+  size      String?
+  sellPrice Int
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  units     InventoryUnit[]
+
+  @@index([tag])
+  @@index([size])
+}
+
+model Vendor {
+  id    String @id @default(cuid())
+  name  String @unique
+  units InventoryUnit[]
+}
+
+model InventoryUnit {
+  id           String    @id @default(cuid())
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vendorId     String
+  vendor       Vendor    @relation(fields: [vendorId], references: [id])
+  costPrice    Int
+  brandingCost Int       @default(0)
+  purchaseDate DateTime  @default(now())
+  status       String    @default("IN_STOCK") // IN_STOCK | SOLD
+  soldPrice    Int?
+  soldDate     DateTime?
+
+  @@index([productId])
+  @@index([status])
+}
+
+model Settings {
+  id           String @id @default("singleton")
+  facebookLink String @default("")
+  priceRanges  Json
+}
